@@ -1,0 +1,6 @@
+#root, html, body, #app, #app>div {
+    height: 100%;
+}
+label {
+    color: white;
+}
