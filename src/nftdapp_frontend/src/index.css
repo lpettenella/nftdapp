@@ -1,6 +1,21 @@
 #root, html, body, #app, #app>div {
     height: 100%;
 }
-label {
-    color: white;
+label, h1, h2, h3, h4, h5, span{
+    color: grey;
+}
+
+.truncateLongTexts {
+    width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.colorwhite {
+    color: white
+}
+
+.my-modal .modal-content {
+    background-color: #282c34;
 }
