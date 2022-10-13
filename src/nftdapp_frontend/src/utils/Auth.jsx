@@ -6,7 +6,7 @@ import { nftservice, createActor as createNftActor } from '../../../declarations
 class Auth {
   client = null;
   nftservice = nftservice;
-  whoami = whoami;
+  //whoami = whoami;
   principal = "";
 
   async init() {
@@ -38,8 +38,8 @@ class Auth {
   generateActors() {
     if (!this.client) return;
     const identity = this.client.getIdentity();
-    this.nftservice = createNftActor('rno2w-sqaaa-aaaaa-aaacq-cai', { agentOptions: { identity } });
-    this.whoami = createWhoamiActor('r7inp-6aaaa-aaaaa-aaabq-cai', { agentOptions: { identity } });
+    this.nftservice = createNftActor('rkp4c-7iaaa-aaaaa-aaaca-cai', { agentOptions: { identity } });
+    //this.whoami = createWhoamiActor('r7inp-6aaaa-aaaaa-aaabq-cai', { agentOptions: { identity } });
   }
 
   async login() {
@@ -54,7 +54,7 @@ class Auth {
             this.principal = String(await this.client.getIdentity().getPrincipal());
             resolve();
         },
-        identityProvider: `http://localhost:8000/?canisterId=rrkah-fqaaa-aaaaa-aaaaq-cai`
+        identityProvider: `http://localhost:8000/?canisterId=ryjl3-tyaaa-aaaaa-aaaba-cai`
       });
     });
   }

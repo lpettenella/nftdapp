@@ -32,6 +32,10 @@
     "nftservice": {
       "main": "src/nftdapp_backend/nftservice.mo",
       "type": "motoko"
+    },
+    "backend": {
+      "main": "src/nftdapp_backend/backend.mo",
+      "type": "motoko"
     }
   },
   "defaults": {
