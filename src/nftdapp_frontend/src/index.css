@@ -1,4 +1,4 @@
-#root, html, body, #app, #app>div {
+#root, body, #app, #app>div {
     height: 100%;
 }
 label, h1, h2, h3, h4, h5, span{

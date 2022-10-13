@@ -23,8 +23,6 @@ export default function Token({isAuth}) {
     const returnToken = async () => {
       try {
         //await auth.init();
-        console.log("GAT")
-        console.log("uaglio", token)
         const tokenInfo = await auth.nftservice.getTokenInfo(Number(params.id));
         setToken(tokenInfo);
         setSrc(tokenInfo);

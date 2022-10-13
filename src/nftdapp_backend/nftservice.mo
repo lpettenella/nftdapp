@@ -97,7 +97,7 @@ actor NFToken {
       case null { Prelude.unreachable() };
       case (?x_) { x_ };
     };
-    
+
     private func _exists(tokenId: Nat) : Bool {
         switch (tokens.get(tokenId)) {
             case (?info) { return true; };
@@ -125,7 +125,7 @@ actor NFToken {
             case _ { return false; };
         }
     };
-    
+
     private func _balanceOf(who: Principal) : Nat {
         switch (users.get(who)) {
             case (?user) { return TrieSet.size(user.tokens); };
@@ -218,7 +218,7 @@ actor NFToken {
             };
         }
     };
-   
+
     private func _clearApproval(owner: Principal, tokenId: Nat) {
         assert(_exists(tokenId) and _isOwner(owner, tokenId));
         switch (tokens.get(tokenId)) {
@@ -258,6 +258,11 @@ actor NFToken {
         _transfer(blackhole, tokenId);
     };
 
+    public func init(owner: Principal): async () {
+        assert(owner_ == blackhole);
+        owner_ := owner;
+    };
+
 	public shared(msg) func setOwner(new: Principal): async Principal {
 		assert(msg.caller == owner_);
 		owner_ := new;
@@ -280,6 +285,28 @@ actor NFToken {
         _addTokenTo(to, totalSupply_);
         totalSupply_ += 1;
         let txid = addTxRecord(msg.caller, #mint(metadata), ?token.index, #user(blackhole), #user(to), Time.now());
+        return #Ok((token.index, txid));
+    };
+
+    public shared(msg) func mintForMyself(isPrivate: Bool, contentType: Text, payload: Blob, nftname: Text): async MintResult {
+        let metadata : TokenMetadata = {
+            attributes = [{ key = "isPrivate"; value = Bool.toText(isPrivate); }];
+            filetype = contentType;
+            location = #InCanister(payload);
+            name = nftname;
+        };
+
+        let token: TokenInfo = {
+            index = totalSupply_;
+            var owner = msg.caller;
+            var metadata = ?metadata;
+            var operator = null;
+            timestamp = Time.now();
+        };
+        tokens.put(totalSupply_, token);
+        _addTokenTo(msg.caller, totalSupply_);
+        totalSupply_ += 1;
+        let txid = addTxRecord(msg.caller, #mint(?metadata), ?token.index, #user(blackhole), #user(msg.caller), Time.now());
         return #Ok((token.index, txid));
     };
 
@@ -539,14 +566,14 @@ actor NFToken {
             };
         };
         let ret = Buffer.Buffer<TokenInfoExt>(tokenIds.size());
-    
+
         for(id in Iter.fromArray(tokenIds)) {
             ret.add(_tokenInfotoExt(_unwrap(tokens.get(id))));
         };
         return ret.toArray();
     };
 
-    public query func ownerOf(tokenId: Nat) : async Result<Principal, Errors> {
+    public query func ownerOf(tokenId: Nat): async Result<Principal, Errors> {
         switch (_ownerOf(tokenId)) {
             case (?owner) {
                 return #ok(owner);
@@ -557,35 +584,15 @@ actor NFToken {
         }
     };
 
-    public query func isOwner(tokenId: Nat) : async ?Principal {
-        switch(_ownerOf(tokenId)) {
-            case (?owner) {
-                return ?owner;
-            };
-            case _ {
-                return null;
-            };
-        }
-    };
-
     public query func getTokenInfo(tokenId: Nat) : async Result<TokenInfoExt, Errors> {
         switch(tokens.get(tokenId)){
             case(?tokeninfo) {
                 return #ok(_tokenInfotoExt(tokeninfo));
             };
-            case _ {
+            case(_) {
                 return #err(#TokenNotExist);
             };
-        }
-    };
-
-    public query func getToken(tokenId: Nat) : async ?TokenInfoExt {
-        switch(tokens.get(tokenId)) {
-            case (?tokeninfo) { 
-                return ?_tokenInfotoExt(tokeninfo);
-            };
-            case _ { return null };
-        }
+        };
     };
 
     // Optional

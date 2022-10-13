@@ -25,7 +25,7 @@ export default function App() {
 
   return (
     <>
-      <div style={{ height:'100%', backgroundColor:'#282c34' }}>
+      <div style={{ minHeight:'100%', backgroundColor:'#282c34' }}>
         <NavbarComp isAuth={isAuth} setAuth={setAuth} />
         <Link to="/create"></Link>
         <Routes>

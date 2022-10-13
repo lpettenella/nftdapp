@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap';
+import { BsFiles } from 'react-icons/bs';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -31,8 +32,8 @@ export default function NavbarComp( {isAuth, setAuth} ) {
           </Nav>
           <Nav>
             { isAuth == null ? null : isAuth ?
-              <Nav className="me-auto">
-                <Navbar.Text>Your principal id: {auth.principal}</Navbar.Text>
+              <Nav>
+                <Navbar.Text style={{ marginRight: "1em" }}>Your principal id: {auth.principal} <a><BsFiles onClick={(e) => console.log(e)}/></a></Navbar.Text>
                 <Button variant="outline-light" onClick={() => handleLogout()}>Logout</Button>
               </Nav>
               :

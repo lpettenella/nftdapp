@@ -27,15 +27,10 @@ export default function Create({isAuth}) {
       const loggedIn = await auth.client.isAuthenticated();
       if(loggedIn) {
         await auth.nftservice.mintForMyself(false, file.type, arrayBuffer, name);
-        console.log("created")
       }
     } catch (e) {
       console.log(e)
     }
-  }
-
-  function handleUpload(e) {
-    console.log(e)
   }
 
   return (
