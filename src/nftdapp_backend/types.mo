@@ -35,6 +35,7 @@ module {
         location: Location;
         attributes: [Attribute];
         name: Text;
+        
     };
 
     public type MintPayload = {
