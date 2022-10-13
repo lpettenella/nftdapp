@@ -23,6 +23,7 @@ import Time "mo:base/Time";
 import TrieSet "mo:base/TrieSet";
 import Bool "mo:base/Bool";
 import Blob "mo:base/Blob";
+import AId "mo:principal/blob/AccountIdentifier";
 
 import Types "./types";
 
@@ -40,6 +41,7 @@ actor NFToken {
     type TokenInfoExt = Types.TokenInfoExt;
     type UserInfo = Types.UserInfo;
     type UserInfoExt = Types.UserInfoExt;
+    type Sale = Types.Sale;
 
     public type Errors = {
         #Unauthorized;
@@ -73,6 +75,82 @@ actor NFToken {
     private var users = HashMap.HashMap<Principal, UserInfo>(1, Principal.equal, Principal.hash);
     private stable var txs: [TxRecord] = [];
     private stable var txIndex: Nat = 0;
+
+    private stable var salesEntries : [(Nat, Sale)] = [];
+    private var sales = HashMap.HashMap<Nat, Sale>(1, Nat.equal, Hash.hash);
+
+    private func _putsale(
+        tokenId: Nat, price: Float, seller: Principal
+    ) {
+        let sale: Sale = {
+            tokenId = tokenId;
+            price = price;
+            seller = seller;
+        };
+        sales.put(tokenId, sale);
+    };
+
+    public shared({ caller }) func sale(tokenId: Nat, price: Float) : async MintResult {
+
+        //check authentication
+
+        switch(tokens.get(tokenId)) {
+            case(?tokeninfo) {
+                if (caller != tokeninfo.owner)
+                    return #Err(#Unauthorized);
+            };
+            case _ {
+                return #Err(#TokenNotExist);
+            };
+        };
+
+        //check there are no sale for the token
+        switch(sales.get(tokenId)) {
+            case(?sale) { return #Err(#InvalidOperator); };
+            case _ {
+                _putsale(tokenId, price, caller);
+                return #Ok(1, 1);
+            };
+        };
+    };
+
+    public shared({ caller }) func buy(tokenId: Nat) : async MintResult {
+
+
+        //check if authenticated
+
+        //check if there is a sale for the token
+        switch(sales.get(tokenId)) {
+            case (?sale) {
+                if (sale.seller == caller)
+                    return #Err(#Unauthorized);
+            };
+            case _ { return #Err(#TokenNotExist); };
+        };
+
+        //check if the caller icp are more than the token price
+
+        //transfer the money to the token's owner
+
+        //transfer the token from the owner to the caller
+        _transfer(caller, tokenId);
+        return #Ok(1, 1);
+    };
+
+    public query func getSalesSize() : async Nat {
+        return sales.size();
+    };
+
+    public query func getTokenPrice(tokenId: Nat) : async ?Float {
+        switch(sales.get(tokenId)) {
+            case(?sale) {
+                return ?sale.price;
+            };
+            case _ {
+                return null;
+            }
+        }
+    };
 
     private func addTxRecord(
         caller: Principal, op: Operation, tokenIndex: ?Nat,
@@ -585,13 +663,24 @@ actor NFToken {
     };
 
     public query func getTokenInfo(tokenId: Nat) : async Result<TokenInfoExt, Errors> {
-        switch(tokens.get(tokenId)){
+        switch(tokens.get(tokenId)) {
             case(?tokeninfo) {
                 return #ok(_tokenInfotoExt(tokeninfo));
             };
             case(_) {
                 return #err(#TokenNotExist);
             };
+        };
+    };
+
+    public query func getToken(tokenId: Nat) : async ?TokenInfoExt {
+        switch(tokens.get(tokenId)) {
+            case(?tokenInfo) {
+                return ?_tokenInfotoExt(tokenInfo);
+            };
+            case _ {
+                return null;
+            }
         };
     };
 
@@ -652,15 +741,19 @@ actor NFToken {
     system func preupgrade() {
         usersEntries := Iter.toArray(users.entries());
         tokensEntries := Iter.toArray(tokens.entries());
+        salesEntries := Iter.toArray(sales.entries());
     };
 
     system func postupgrade() {
         type TokenInfo = Types.TokenInfo;
         type UserInfo = Types.UserInfo;
+        type Sale = Types.Sale;
 
         users := HashMap.fromIter<Principal, UserInfo>(usersEntries.vals(), 1, Principal.equal, Principal.hash);
         tokens := HashMap.fromIter<Nat, TokenInfo>(tokensEntries.vals(), 1, Nat.equal, Hash.hash);
+        sales := HashMap.fromIter<Nat, Sale>(salesEntries.vals(), 1, Nat.equal, Hash.hash);
         usersEntries := [];
         tokensEntries := [];
+        salesEntries := [];
     };
 };

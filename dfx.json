@@ -33,15 +33,23 @@
       "main": "src/nftdapp_backend/nftservice.mo",
       "type": "motoko"
     },
-    "backend": {
-      "main": "src/nftdapp_backend/backend.mo",
+    "sale": {
+      "main": "src/nftdapp_backend/sale.mo",
       "type": "motoko"
+    },
+    "ledger": {
+      "type": "custom",
+      "wasm": "ledger.wasm",
+      "candid": "ledger.public.did"
     }
   },
   "defaults": {
     "build": {
       "args": "",
       "packtool": ""
+    },
+    "replica": {
+      "subnet_type":"system"
     }
   },
   "dfx": "0.11.2",

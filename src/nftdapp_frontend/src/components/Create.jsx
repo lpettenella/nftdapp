@@ -1,13 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import "bootstrap/dist/css/bootstrap.min.css";
-import {Form , Card, Input, Row, Button, Label, Col, Alert} from 'react-bootstrap';  
+import { Form , Card, Input, Row, Button, Label, Col, Alert, Spinner } from 'react-bootstrap';  
 import { auth } from '../utils/Auth';
+import { useNavigate } from 'react-router-dom';
 
 export default function Create({isAuth}) {
 
-  const [name, setName] = useState("");
-  const [file, setFile] = useState();
-  const [src, setSrc] = useState();
+  const navigate = useNavigate();
+
+  const [ name, setName ] = useState("");
+  const [ price, setPrice ] = useState(0.00);
+  const [ file, setFile ] = useState();
+  const [ src, setSrc ] = useState();
+  const [ loading, setLoading ] = useState(false);
 
   function handleFile() {
     setSrc(URL.createObjectURL(file.files[0]));
@@ -17,7 +22,13 @@ export default function Create({isAuth}) {
     setName(name);
   }
 
-  async function handleSubmit() {
+  function handlePrice(price) {
+    setPrice(price);
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     const picture = file.files[0];
     const blob = new Blob([picture],{type: picture.type}); 
     const arrayBuffer = [...new Uint8Array(await blob.arrayBuffer())];
@@ -26,7 +37,9 @@ export default function Create({isAuth}) {
       await auth.init();
       const loggedIn = await auth.client.isAuthenticated();
       if(loggedIn) {
-        await auth.nftservice.mintForMyself(false, file.type, arrayBuffer, name);
+        let token = await auth.nftservice.mintForMyself(false, file.type, arrayBuffer, name)
+        await auth.sale.sale(token.Ok[0], Number(price));
+        navigate(`/token/${token.Ok[0]}`);
       }
     } catch (e) {
       console.log(e)
@@ -36,15 +49,23 @@ export default function Create({isAuth}) {
   return (
     <>
     { isAuth == true ?
-      <div>
+      <div style={{ width: '50%', margin: 'auto' }}>
         <form onSubmit={handleSubmit} style={{ marginTop: '1em', textAlign: 'left' }}>
           <Form.Label style={{ float: "left" }}>Upload an image</Form.Label>
           <Form.Control id="file" type="file" ref={(ref) => setFile(ref)} onChange={handleFile} required></Form.Control>
           <Form.Label style={{ float: "left" }}>Set a name</Form.Label>
           <Form.Control type="text" placeholder="Name" value={name} onChange={(e) => handleName(e.target.value)} required />
-          <Button variant="outline-light" type="submit">Create</Button>
+          <Form.Label style={{ float: "left" }}>Set a price</Form.Label>
+          <Form.Control type="number" step="0.01" placeholder="Price" value={price} onChange={(e) => handlePrice(e.target.value)} required />
+          {
+            loading ? <Spinner
+              style={{ marginTop: '1em' }}
+              animation="border"
+              variant="light"/> :
+            <Button style={{ marginTop: '1em' }} variant="outline-light" type="submit">Create</Button>
+          }
         </form> 
-        <div style={{ margin: 'auto', width: '50%', textAlign: 'left' }}>
+        <div style={{ marginTop: '1em', textAlign: 'left' }}>
           <Row>
             <Col md={6}>
               <Card className='card border-light bg-transparent text-white' style={{ maxWidth: '250px', maxHeight: '290px', margin: 'auto'}} >  
@@ -63,18 +84,3 @@ export default function Create({isAuth}) {
     </>
   );
 }
-/*
-<Form.Group className="mb-3" controlId="formFile">
-<Form.Label>Upload an image</Form.Label>
-<Form.Control type="file" ref={(ref) => setFile(ref)} required />
-</Form.Group>
-<Form.Group className="mb-3" controlId="formBasicPassword">
-<Form.Label>Name</Form.Label>
-<Form.Control type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-</Form.Group>
-<Form.Group className="mb-3">
-<Button variant="outline-light" type="submit">
-  Submit
-</Button>
-</Form.Group>
-*/

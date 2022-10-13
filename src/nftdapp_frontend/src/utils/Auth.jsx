@@ -2,11 +2,13 @@ import { AuthClient } from '@dfinity/auth-client';
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { whoami, createActor as createWhoamiActor } from '../../../declarations/whoami';
 import { nftservice, createActor as createNftActor } from '../../../declarations/nftservice';
+import { sale, createActor as createSaleActor } from '../../../declarations/sale/index';
+import { setMaxListeners } from 'process';
 
 class Auth {
   client = null;
   nftservice = nftservice;
-  //whoami = whoami;
+  sale = sale;
   principal = "";
 
   async init() {
@@ -38,7 +40,8 @@ class Auth {
   generateActors() {
     if (!this.client) return;
     const identity = this.client.getIdentity();
-    this.nftservice = createNftActor('rkp4c-7iaaa-aaaaa-aaaca-cai', { agentOptions: { identity } });
+    this.nftservice = createNftActor('r7inp-6aaaa-aaaaa-aaabq-cai', { agentOptions: { identity } });
+    this.sale = createSaleActor('qsgjb-riaaa-aaaaa-aaaga-cai', { agentOptions: { identity } });
     //this.whoami = createWhoamiActor('r7inp-6aaaa-aaaaa-aaabq-cai', { agentOptions: { identity } });
   }
 
@@ -54,7 +57,7 @@ class Auth {
             this.principal = String(await this.client.getIdentity().getPrincipal());
             resolve();
         },
-        identityProvider: `http://localhost:8000/?canisterId=ryjl3-tyaaa-aaaaa-aaaba-cai`
+        identityProvider: `http://localhost:8000/?canisterId=rrkah-fqaaa-aaaaa-aaaaq-cai`
       });
     });
   }

@@ -25,16 +25,14 @@ export default function App() {
 
   return (
     <>
-      <div style={{ minHeight:'100%', backgroundColor:'#282c34' }}>
-        <NavbarComp isAuth={isAuth} setAuth={setAuth} />
-        <Link to="/create"></Link>
-        <Routes>
-          <Route path="/" element={<Home isAuth={isAuth} />} />
-          <Route path="/wallet" element={<Wallet isAuth={isAuth} />} />
-          <Route path="/create" element={<Create isAuth={isAuth} />} />
-          <Route path="/token/:id" element={<Token isAuth={isAuth} />} />
-        </Routes>
-      </div>
+      <NavbarComp isAuth={isAuth} setAuth={setAuth} />
+      <Link to="/create"></Link>
+      <Routes>
+        <Route path="/" element={<Home isAuth={isAuth} />} />
+        <Route path="/wallet" element={<Wallet isAuth={isAuth} />} />
+        <Route path="/create" element={<Create isAuth={isAuth} />} />
+        <Route path="/token/:id" element={<Token isAuth={isAuth} />} />
+      </Routes>
     </>
   )
 }

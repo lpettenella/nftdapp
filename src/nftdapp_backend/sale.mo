@@ -14,16 +14,18 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 import TrieSet "mo:base/TrieSet";
 
-import Nftservice "nftservice";
+import Nftservice "canister:nftservice";
 import Types "./types";
 
 actor NftSale {
 
     type TokenInfo = Types.TokenInfo;
+    type TokenInfoExt = Types.TokenInfoExt;
     type UserInfo = Types.UserInfo;
-    //type NFToken = Nftservice.NFToken;
 
-    public type Result = {
+    public type Result<Ok, Err> = {#ok : Ok; #err : Err};
+
+    public type MintResult = {
         #Ok: Nat;
         #Err: Errors;
     };
@@ -41,8 +43,7 @@ actor NftSale {
         seller: Principal;
     };
 
-    private var tokens = HashMap.HashMap<Nat, TokenInfo>(1, Nat.equal, Hash.hash);
-    private var users = HashMap.HashMap<Principal, UserInfo>(1, Principal.equal, Principal.hash);
+    private stable var salesEntries : [(Nat, Sale)] = [];
     private var sales = HashMap.HashMap<Nat, Sale>(1, Nat.equal, Hash.hash);
 
     private func _putsale(
@@ -56,33 +57,34 @@ actor NftSale {
         sales.put(tokenId, sale);
     };
 
-    public shared({ caller }) func sale(tokenId: Nat, price: Float) : async Result {
-
-        let T = await Nftservice.NFToken;
+    public shared({ caller }) func sale(tokenId: Nat, price: Float) : async MintResult {
 
         //check authentication
-        let token = await T.getToken(tokenId);
+
+        let token : Result<TokenInfoExt, Errors> = await Nftservice.getTokenInfo(tokenId);
 
         switch(token) {
-            case(?token) {
-                if (caller != token.owner)
+            case(#ok(tokeninfo)) {
+                if (caller != tokeninfo.owner)
                     return #Err(#Unauthorized);
             };
-            case(null) { return #Err(#TokenNotExist); };
+            case(#err(e)) {
+                return #Err(#TokenNotExist);
+            };
         };
 
         //check there are no sale for the token
         switch(sales.get(tokenId)) {
             case(?sale) { return #Err(#InvalidOperator); };
             case _ {
+                _putsale(tokenId, price, caller);
                 return #Ok(1);
             };
         };
     };
 
-    public shared({ caller }) func buy(tokenId: Nat) : async Result{
-
-        let T  = await Nftservice.NFToken;
+/*
+    public shared({ caller }) func buy(tokenId: Nat) : async MintResult{
 
         //check if authenticated
 
@@ -101,10 +103,33 @@ actor NftSale {
 
         //transfer the token from the owner to the caller
         await T.transfer(caller, tokenId);
+    };*/
+
+    public query func getTokenPrice(tokenId: Nat) : async ?Float {
+        switch(sales.get(tokenId)) {
+            case(?sale) {
+                return ?sale.price;
+            };
+            case _ {
+                return null;
+            }
+        }
     };
 
     public query func getSalesSize() : async Nat {
         return sales.size();
-    }
+    };
+
+    // upgrade functions
+    system func preupgrade() {
+        salesEntries := Iter.toArray(sales.entries());
+    };
+
+    system func postupgrade() {
+        type Sale = Types.Sale;
+
+        sales := HashMap.fromIter<Nat, Sale>(salesEntries.vals(), 1, Nat.equal, Hash.hash);
+        salesEntries := [];
+    };
 
 }

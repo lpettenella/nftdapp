@@ -52,6 +52,12 @@ module {
         timestamp: Time.Time;
     };
 
+    public type Sale = {
+        tokenId: Nat;
+        price: Float;
+        seller: Principal;
+    };
+
     public type TokenInfoExt = {
         index: Nat;
         owner: Principal;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { _arrayBufferToBase64 } from '../utils/Utils';
-import { Modal, Button, Col, Row, Form, Spinner } from '../../../../node_modules/react-bootstrap/esm/index';
+import { Modal, Button, Col, Row, Form, Spinner, Image } from '../../../../node_modules/react-bootstrap/esm/index';
 import { Principal } from "@dfinity/principal";
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../utils/Auth';
@@ -9,6 +9,7 @@ import { auth } from '../utils/Auth';
 export default function Token({isAuth}) {
 
   const [ token, setToken ] = useState();
+  const [ price, setPrice ] = useState(0);
   const [ image, setImage ] = useState();
   const [ address, setAddress ] = useState("");
   const [ show, setShow ] = useState(false);
@@ -24,7 +25,10 @@ export default function Token({isAuth}) {
       try {
         //await auth.init();
         const tokenInfo = await auth.nftservice.getTokenInfo(Number(params.id));
+        const price = await auth.sale.getTokenPrice(tokenInfo.ok.index);
         setToken(tokenInfo);
+        if(price != null)
+          setPrice(price);
         setSrc(tokenInfo);
       } catch(e) {
         console.log(e);
@@ -57,8 +61,10 @@ export default function Token({isAuth}) {
   return (
     <>
       <Row>
-        <Col md={6} sm={12}>
-          <img src={image} />
+        <Col md={6} sm={12} >
+          <p style={{ textAlign: 'center' }}>
+            <Image src={image} style={{ maxWidth: '100%' }} />
+          </p>
         </Col>
         <Col md={3} sm={6}>
           {token ? 
@@ -70,7 +76,7 @@ export default function Token({isAuth}) {
             </p>
             <p style={{ textAlign: 'left' }}>
               <span>Price</span>
-              <span className='colorwhite' style={{ float: 'right' }}>Bello</span>
+              <span className='colorwhite' style={{ float: 'right' }}>{price}</span>
             </p>
             { (String(token.ok.owner) === String(auth.principal)) ?
             <Button variant='light' onClick={handleShow}>Transfer</Button> : <></>
