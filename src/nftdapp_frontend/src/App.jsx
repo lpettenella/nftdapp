@@ -31,7 +31,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home isAuth={isAuth} />} />
           <Route path="/wallet" element={<Wallet isAuth={isAuth} />} />
-          <Route path="/create" element={<Create/>} />
+          <Route path="/create" element={<Create isAuth={isAuth} />} />
           <Route path="/token/:id" element={<Token isAuth={isAuth} />} />
         </Routes>
       </div>
